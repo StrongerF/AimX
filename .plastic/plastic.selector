@@ -1,0 +1,4 @@
+repository "AimXPrototype@StrongerF@cloud"
+  path "/"
+    br "/main"
+    co "/main"
