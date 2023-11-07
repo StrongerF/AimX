@@ -173,7 +173,7 @@ MonoBehaviour:
   objectPrefab: {fileID: 4517151090700545861, guid: d5a43bc36dcdc134f93e25798ea2255e,
     type: 3}
   targetSize: 1
-  numberOfObjects: 10
+  numberOfObjects: 8
   minDistance: 1
   maxAttempts: 10
 --- !u!1 &160379913
