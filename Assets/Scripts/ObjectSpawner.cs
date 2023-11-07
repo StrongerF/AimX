@@ -4,24 +4,41 @@ using UnityEngine.UIElements;
 
 public class ObjectSpawner : MonoBehaviour
 {
+    [Header("Wall")]
     [SerializeField] private Transform wallObject;
-    [SerializeField] private GameObject objectPrefab;
+    [SerializeField][Range(5, 30)] private int verticalWallSize = 15;
+    [SerializeField][Range(5, 50)] private int horizontalWallSize = 20;
 
+    [Header("Prefab")]
+    [SerializeField] private GameObject objectPrefab;
+    [SerializeField][Range(0.1f, 3f)] private float targetSize = 1;
     [SerializeField][Range(1, 30)] private int numberOfObjects = 10;
+
+    [Header("Object Creation Limitations")]
     [SerializeField][Min(0)] private float minDistance = 2f;
     [SerializeField][Range(0, 30)] private int maxAttempts = 10;
-    [SerializeField] private Vector2 wallSize;
+    
+
+    
+    private float verticalInterval;
+    private float horizontalInterval;
 
     
     private List<GameObject> spawnedObjects = new List<GameObject>();
 
     private void Awake()
     {
+        // Set wall size
+        wallObject.transform.localScale = new Vector3(horizontalWallSize, verticalWallSize, 1);
+
+        // Set prefab size
+        objectPrefab.transform.localScale = Vector3.one * targetSize;
+
         // Get half the lengths of the sides of the wall
         // to generate a random position (for example, from -length to +length)
         // and subtract the prefab radius.
-        wallSize.x = wallSize.x / 2 - objectPrefab.transform.localScale.x;
-        wallSize.y = wallSize.y / 2 - objectPrefab.transform.localScale.y;
+        verticalInterval = verticalWallSize / 2 - objectPrefab.transform.localScale.y;
+        horizontalInterval = horizontalWallSize / 2 - objectPrefab.transform.localScale.x;
     }
 
     private void Start()
@@ -30,7 +47,7 @@ public class ObjectSpawner : MonoBehaviour
         for (int i = 0; i < numberOfObjects; i++)
         {
             GameObject newObject = Instantiate(objectPrefab, GetRandomPosition(), Quaternion.identity);
-            newObject.transform.SetParent(wallObject.transform, false);
+            newObject.transform.SetParent(transform, false);
 
             spawnedObjects.Add(newObject);
         }
@@ -48,8 +65,8 @@ public class ObjectSpawner : MonoBehaviour
             attemptsCount++;
 
             // Generate a random position within specified boundaries
-            position = new Vector3(Random.Range(-wallSize.x, wallSize.x),
-                                   Random.Range(-wallSize.y, wallSize.y),
+            position = new Vector3(Random.Range(-horizontalInterval, horizontalInterval),
+                                   Random.Range(-verticalInterval, verticalInterval),
                                    0);
 
             // Prevents infinite loops if a safe location cannot be found
