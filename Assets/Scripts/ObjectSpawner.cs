@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class ObjectSpawner : MonoBehaviour
 {
@@ -17,13 +16,13 @@ public class ObjectSpawner : MonoBehaviour
     [Header("Object Creation Limitations")]
     [SerializeField][Min(0)] private float minDistance = 2f;
     [SerializeField][Range(0, 30)] private int maxAttempts = 10;
-    
 
-    
+
+
     private float verticalInterval;
     private float horizontalInterval;
 
-    
+
     private List<GameObject> spawnedObjects = new List<GameObject>();
 
     private void Awake()

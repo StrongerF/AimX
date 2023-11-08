@@ -1,8 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -88,8 +84,8 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // Update the current movement velocity smoothly
-        currentMoveVelocity = Vector3.SmoothDamp(currentMoveVelocity, 
-                                                 moveVector * currentSpeed, 
+        currentMoveVelocity = Vector3.SmoothDamp(currentMoveVelocity,
+                                                 moveVector * currentSpeed,
                                                  ref moveDampVelocity,
                                                  moveSmoothTime);
 
@@ -135,5 +131,5 @@ public class PlayerMovement : MonoBehaviour
         Debug.Log("Jumped");
     }
 
-    
+
 }

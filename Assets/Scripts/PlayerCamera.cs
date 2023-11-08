@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class PlayerCamera : MonoBehaviour
@@ -46,7 +43,7 @@ public class PlayerCamera : MonoBehaviour
 
         // Limit up and down rotation to -90 and 90 degrees
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
-        
+
         // Rotate
         transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
         playerTransform.Rotate(Vector3.up, mouseX);
@@ -68,7 +65,7 @@ public class PlayerCamera : MonoBehaviour
         if (Physics.Raycast(ray, out raycastHit, rayDistance, targetMask))
         {
             targetSpawner.ChangePosition(raycastHit.collider.gameObject);
-            
+
             Debug.Log("Hit");
         }
     }
