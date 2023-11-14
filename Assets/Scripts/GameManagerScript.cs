@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class GameManagerScript : MonoBehaviour
 {
-
-    [SerializeField] private GameObject pauseMenuUI;
+    [SerializeField] private GameObject pauseMenu;
+    [SerializeField] private GameObject settingsPanel;
     [SerializeField] private GameObject playerCameraObject;
 
     private PlayerCamera playerCameraScript;
@@ -17,7 +17,7 @@ public class GameManagerScript : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (Input.GetKeyDown(KeyCode.Escape) && !settingsPanel.active)
         {
             if (isPaused)
             {
@@ -32,9 +32,11 @@ public class GameManagerScript : MonoBehaviour
 
     public void Pause()
     {
-        pauseMenuUI.SetActive(true);
+        // Show pause menu and disable camera control
+        pauseMenu.SetActive(true);
         playerCameraScript.enabled = false;
 
+        // Unlock cursor
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
@@ -44,9 +46,11 @@ public class GameManagerScript : MonoBehaviour
 
     public void Resume()
     {
-        pauseMenuUI.SetActive(false);
+        // Hide pause menu and enable camera control
+        pauseMenu.SetActive(false);
         playerCameraScript.enabled = true;
 
+        // Lock cursor
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
