@@ -3,8 +3,8 @@ using UnityEngine;
 public class PlayerCamera : MonoBehaviour
 {
     [Header("Mouse Sensivity")]
-    [SerializeField] private float sensX;
-    [SerializeField] private float sensY;
+    public float sensX;
+    public float sensY;
 
     [Header("Shoot")]
     [SerializeField] private ObjectSpawner targetSpawner;
