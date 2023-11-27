@@ -1,103 +1,195 @@
+using Settings;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 using UnityEngine.UI;
+using static Settings.ControlSettings;
 
 public class SettingsMenu : MonoBehaviour
 {
-    private Resolution[] resolutions;
     private List<string> resolutionStrings;
 
+    [Header("Video Settings")]
     [SerializeField] private TMP_Dropdown resolutionDropdown;
     [SerializeField] private string resolutionStringFormat = "{0}x{1}@{2}Hz";
     [SerializeField] private TMP_Dropdown fullscreenModeDropdown;
+    [SerializeField] private TMP_Dropdown languageDropdown;
+
+    [Header("Control Settings")]
+    [SerializeField] private TMP_Dropdown gameDropdown;
+    [SerializeField] private TMP_InputField sensitivityInputField;
+
+    [Header("Buttons")]
     [SerializeField] private Button saveButton;
 
+    private GameSettings currentSettings;
 
     private string currentResolutionString;
-    private string selectedResolutionString;
 
-    private FullScreenMode currentFullscreenMode;
-    private FullScreenMode selectedFullscreenMode;
+    #region Video Settings
+    private VideoSettings selectedVideoSettings;
+    #endregion
+    #region Control Settings
+    private ControlSettings selectedControlSettings;
+    #endregion
+
+
+    
 
     private void Awake()
     {
-        SettingsManager.ApplySettingsOnStartup();
-        resolutions = Screen.resolutions;
-        currentResolutionString = Screen.currentResolution.ToStringExtended(resolutionStringFormat);
-        currentFullscreenMode = Screen.fullScreenMode;
-
         InitializeUI();
-        LoadCurrentSettings();
-    }
-
-    private void LoadCurrentSettings()
-    {
-        selectedFullscreenMode = Screen.fullScreenMode;
-        selectedResolutionString = Screen.currentResolution.ToStringExtended(resolutionStringFormat);
-
-        SetDropdownValues();
-    }
-
-    private void SetDropdownValues()
-    {
-        resolutionDropdown.value = resolutionStrings.IndexOf(selectedResolutionString);
-        fullscreenModeDropdown.value = GameSettings.FullScreenModes.IndexOf(selectedFullscreenMode);
     }
 
     private void InitializeUI()
     {
-        resolutionDropdown.ClearOptions();
-        resolutionStrings = new List<string>(resolutions.Length);
+        #region Video Settings
 
-        foreach (var resolution in resolutions)
+        // Add values in resolution dropdown
+        resolutionDropdown.ClearOptions();
+        resolutionStrings = new List<string>(VideoSettings.Resolutions.Length);
+
+        foreach (var resolution in VideoSettings.Resolutions)
         {
             string resolutionString = resolution.ToStringExtended(resolutionStringFormat);
             resolutionStrings.Add(resolutionString);
         }
 
         resolutionDropdown.AddOptions(resolutionStrings);
+
+        // Add values in language dropdown
+        languageDropdown.ClearOptions();
+        languageDropdown.AddOptions(LanguageManager.LocalesNames);
+
+        #endregion
+        #region Control Settings
+
+        gameDropdown.ClearOptions();
+        gameDropdown.AddOptions(MouseSensitivity.GameTitles);
+
+        #endregion
     }
+    private void OnEnable()
+    {
+        LoadCurrentSettings();
+        selectedVideoSettings.IsChanged = false;
+        selectedControlSettings.IsChanged = false;
+    }
+
+    private void LoadCurrentSettings()
+    {
+        SetCurrentValues();
+        SetMenuValues();
+    }
+
+    private void SetCurrentValues()
+    {
+        currentSettings = SettingsManager.GetSettingsFromPlayerPrefs();
+
+        selectedVideoSettings = currentSettings.Video;
+        selectedControlSettings = currentSettings.Control;
+
+        currentResolutionString = currentSettings.Video.Resolution.ToStringExtended(resolutionStringFormat);
+        Debug.Log(currentResolutionString);
+        
+    }
+
+    private void SetMenuValues()
+    {
+        // Video
+        languageDropdown.value = LanguageManager.LocalesNames.IndexOf(LanguageManager.CurrentLanguage);
+        resolutionDropdown.value = resolutionStrings.IndexOf(currentResolutionString);
+        fullscreenModeDropdown.value = VideoSettings.FullScreenModes.IndexOf(currentSettings.Video.FullscreenMode);
+
+        // Control
+        gameDropdown.value = MouseSensitivity.Games.IndexOf(currentSettings.Control.Sensitivity.SourceGame);
+        sensitivityInputField.text = currentSettings.Control.Sensitivity.SourceGameSensitivity.ToString();
+
+        UpdateSaveButtonInteractivity(false);
+    }
+
+
 
     public void OnFullscreenModeDropdownChanged(int index)
     {
-        selectedFullscreenMode = GameSettings.GetFullScreenMode(index);
-        CheckChanges();
+        selectedVideoSettings.FullscreenMode = VideoSettings.GetFullScreenMode(index);
+        selectedVideoSettings.IsChanged = true;
+        UpdateSaveButtonInteractivity(true);
     }
 
     public void OnResolutionDropdownChanged(int index)
     {
-        selectedResolutionString = resolutionStrings[index];
-        CheckChanges();
+        selectedVideoSettings.Resolution = VideoSettings.Resolutions[index];
+        selectedVideoSettings.IsChanged = true;
+        UpdateSaveButtonInteractivity(true);
     }
 
-    private void CheckChanges()
+    public void OnLanguageDropdownChanged(int index)
     {
-        bool resolutionChanged = selectedResolutionString != currentResolutionString;
-        bool fullscreenChanged = selectedFullscreenMode != currentFullscreenMode;
+        LanguageManager.Instance.SetLanguage(LanguageManager.LocalesCodes[index]);
+    }
 
-        Debug.Log($"ResolutionChanged\nValue: {resolutionChanged}");
-        Debug.Log($"FullscreenChanged\nValue: {fullscreenChanged}");
+    public void OnGameDropdownChanged(int index)
+    {
+        MouseSensitivity.Game sourceGame = selectedControlSettings.Sensitivity.SourceGame;
+        MouseSensitivity.Game targetGame = MouseSensitivity.Games[index];
 
-        saveButton.interactable = resolutionChanged || fullscreenChanged;
+        float sensitivity = MouseSensitivity.ConvertBetweenGames(sourceGame, targetGame, selectedControlSettings.Sensitivity.SourceGameSensitivity);
+        sensitivityInputField.text = Math.Round(sensitivity, 3).ToString();
+
+        selectedControlSettings.Sensitivity.SourceGame = targetGame;
+
+        selectedControlSettings.IsChanged = true;
+        UpdateSaveButtonInteractivity(true);
+    }
+
+    public void OnSensitivityValueChanged(string value)
+    {
+        float sensitivityValue;
+
+        if (!float.TryParse(value, out sensitivityValue))
+        {
+            Debug.LogError("Invalid sensitivity value entered.");
+            return;
+        }
+
+        if (sensitivityValue < 0) sensitivityValue = 0;
+
+        selectedControlSettings.Sensitivity.SourceGameSensitivity = sensitivityValue;
+        Debug.Log($"Sensitivity changed to: {sensitivityValue}");
+
+        selectedControlSettings.IsChanged = true;
+        UpdateSaveButtonInteractivity(true);
+    }
+
+    public void OnSensitivityEndEdit(string value)
+    {
+        if (!float.TryParse(value, out float sensitivityValue))
+        {
+            sensitivityInputField.text = "1";
+        }
+    }
+
+    private void UpdateSaveButtonInteractivity(bool interactable)
+    {
+        saveButton.interactable = interactable;
     }
 
     public void SaveChanges()
     {
-        int resolutionIndex = resolutionDropdown.value;
-        Resolution res = resolutions[resolutionIndex];
-        GameSettings settings = new GameSettings(res.width, res.height, selectedFullscreenMode, (int)res.refreshRateRatio.value);
-
+        GameSettings settings = new GameSettings(selectedVideoSettings, selectedControlSettings);
 
         SettingsManager.ApplySettings(settings);
-        SettingsManager.SaveChanges(settings);
-
-        currentResolutionString = selectedResolutionString;
-        currentFullscreenMode = selectedFullscreenMode;
+        SettingsManager.SaveSettings(settings);
 
         Debug.Log("CHANGES SAVED");
 
-        CheckChanges();
+        PauseMenu.Instance.HideSettingsMenu();
     }
 }
 
@@ -108,6 +200,6 @@ public static class ResolutionExtension
         return string.Format(format,
                              resolution.width,
                              resolution.height,
-                             ((int)resolution.refreshRateRatio.value).ToString("0"));
+                             resolution.refreshRateRatio.value.ToString("0"));
     }
 }

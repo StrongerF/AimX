@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: SettingsTableString Shared Data
+  m_EditorClassIdentifier: 
+  m_TableCollectionName: SettingsTableString
+  m_TableCollectionNameGuidString: 6abefb590b56ec247a4be4fa397a01b1
+  m_Entries:
+  - m_Id: 7567548416
+    m_Key: SettingsHeaderKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1362365489152
+    m_Key: SaveButtonKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1425288437760
+    m_Key: CancelButtonKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 375477563793408
+    m_Key: VideoButtonKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 375540423827456
+    m_Key: AudioButtonKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 375595704754176
+    m_Key: EnvironmentButtonKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 375709823377408
+    m_Key: ControlButtonKey
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 314482668871352346
+  references:
+    version: 2
+    RefIds:
+    - rid: 314482668871352346
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables,
+        asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1700058165218

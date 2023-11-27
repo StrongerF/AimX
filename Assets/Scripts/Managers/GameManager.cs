@@ -1,23 +1,51 @@
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 
-public class GameManagerScript : MonoBehaviour
+public class GameManager : MonoBehaviour
 {
+    private static GameManager instance;
+
+    public static GameManager Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindObjectOfType<GameManager>();
+                if (instance == null)
+                {
+                    GameObject gameObject = new GameObject("GameManager");
+                    instance = gameObject.AddComponent<GameManager>();
+                }
+            }
+            return instance;
+        }
+    }
+
     [SerializeField] private GameObject pauseMenu;
     [SerializeField] private GameObject settingsPanel;
-    [SerializeField] private GameObject playerCameraObject;
+    [SerializeField] private PlayerCamera playerCamera;
 
-    private PlayerCamera playerCameraScript;
     private bool isPaused = false;
 
 
     private void Awake()
     {
-        playerCameraScript = playerCameraObject.GetComponent<PlayerCamera>();
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape) && !settingsPanel.active)
+        if (Input.GetKeyDown(KeyCode.Escape) && !settingsPanel.activeSelf)
         {
             if (isPaused)
             {
@@ -34,7 +62,7 @@ public class GameManagerScript : MonoBehaviour
     {
         // Show pause menu and disable camera control
         pauseMenu.SetActive(true);
-        playerCameraScript.enabled = false;
+        playerCamera.enabled = false;
 
         // Unlock cursor
         Cursor.lockState = CursorLockMode.None;
@@ -48,7 +76,7 @@ public class GameManagerScript : MonoBehaviour
     {
         // Hide pause menu and enable camera control
         pauseMenu.SetActive(false);
-        playerCameraScript.enabled = true;
+        playerCamera.enabled = true;
 
         // Lock cursor
         Cursor.lockState = CursorLockMode.Locked;
