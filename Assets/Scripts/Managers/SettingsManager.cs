@@ -1,15 +1,14 @@
 using Settings;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
+using static Settings.ControlSettings;
 
 public class SettingsManager : MonoBehaviour 
 {
-    #region Instance
     private static SettingsManager instance;
     public static SettingsManager Instance
     {
@@ -27,7 +26,6 @@ public class SettingsManager : MonoBehaviour
             return instance;
         }
     }
-    #endregion
 
     // PlayerPrefs
     #region Registry Keys
@@ -36,6 +34,8 @@ public class SettingsManager : MonoBehaviour
     private const string ResolutionWidthKey = "ResolutionWidth";
     private const string ResolutionHeightKey = "ResolutionHeight";
     private const string FullScreenKey = "FullscreenMode";
+    private const string RefreshRateNumeratorKey = "RefreshRateNumerator";
+    private const string RefreshRateDenominatorKey = "RefreshRateDenominator";
 
     // Control settings
     private const string GameSensitivityKey = "GameSensitivity";
@@ -43,10 +43,12 @@ public class SettingsManager : MonoBehaviour
 
     #endregion
 
+    // Change mouse sensitivity
+    [SerializeField] private PlayerCamera playerCamera;
+
 
     private void Awake()
     {
-        #region Instance
         if (instance == null)
         {
             instance = this;
@@ -56,7 +58,6 @@ public class SettingsManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-        #endregion
     }
 
     private void Start()
@@ -67,103 +68,88 @@ public class SettingsManager : MonoBehaviour
     public static void SaveSettings(GameSettings settings)
     {
         // Video
-        if (settings.Video != null)
+        if (settings.Video.IsChanged)
         {
-            // I wanted to add a refresh rate feature, but I don't have a 144Hz monitor
+            PlayerPrefs.SetInt(ResolutionWidthKey, settings.Video.Resolution.width);
+            PlayerPrefs.SetInt(ResolutionHeightKey, settings.Video.Resolution.height);
+            PlayerPrefs.SetInt(FullScreenKey, VideoSettings.FullScreenModes.IndexOf(settings.Video.FullscreenMode));
+            PlayerPrefs.SetInt(RefreshRateNumeratorKey, (int)settings.Video.Resolution.refreshRateRatio.numerator);
+            PlayerPrefs.SetInt(RefreshRateDenominatorKey, (int)settings.Video.Resolution.refreshRateRatio.denominator);
+            
         }
 
         // Control
-        if (settings.Control != null)
+        if (settings.Control.IsChanged)
         {
-            PlayerPrefs.SetString(GameSensitivityKey, settings.Control.Sensitivity.SourceGame);
+            PlayerPrefs.SetString(GameSensitivityKey, settings.Control.Sensitivity.SourceGame.Title);
             PlayerPrefs.SetFloat(MouseSensitivityKey, settings.Control.Sensitivity.SourceGameSensitivity);
         }
-        
-        PlayerPrefs.Save();
+       
 
-        Debug.Log("SETTINGS SAVED!");
+        PlayerPrefs.Save();
     }
 
     public static void ApplySettings(GameSettings settings)
     {
-
-        if (settings.Video != null)
+        if (settings.Video.IsChanged)
         {
-            Debug.Log("APPLYING VIDEO SETTINGS...");
-            Instance.ChangeResolution(settings.Video);
+            Debug.Log("APPLYING VIDEO SETTINGS");
+            Screen.fullScreenMode = settings.Video.FullscreenMode;
+            Screen.SetResolution(settings.Video.Resolution.width,
+                                 settings.Video.Resolution.height,
+                                 settings.Video.FullscreenMode,
+                                 settings.Video.Resolution.refreshRateRatio);
+            // TODO: Fix resolution changing
+            // When changing the RESOLUTION to a higher resolution
+            // and at the same time changing the DISPLAY MODE
+            // from FULLSCREEN to FULLSCREEN WINDOWED mode,
+            // only the DISPLAY MODE is applied
         }
-        if (settings.Control != null)
+        if (settings.Control.IsChanged)
         {
-            Debug.Log("APPLYING CONTROL SETTINGS...");
-            PlayerCamera.Sensitivity = settings.Control.Sensitivity.ModifiedSensitivity;
+            Debug.Log("APPLYING CONTROL SETTINGS");
+            Instance.playerCamera.sensX = settings.Control.Sensitivity.ModifiedSensitivity;
+            Instance.playerCamera.sensY = settings.Control.Sensitivity.ModifiedSensitivity;
         }
-
-        Debug.Log("SETTINGS APPLIED!");
+        
+        
+        
+        Debug.Log("CHANGES APPLIED");
     }
-
-
-    void ChangeResolution(VideoSettings videoSettings)
-    {
-        // When changing the RESOLUTION to a higher resolution
-        // and at the same time changing the DISPLAY MODE
-        // from FULLSCREEN to FULLSCREEN WINDOWED mode,
-        // only the DISPLAY MODE is applied.
-
-        // I use a coroutine to change the display mode in the previous frame
-        // and change the resolution in the next frame
-        StartCoroutine(ChangeResolutionCoroutine());
-
-        IEnumerator ChangeResolutionCoroutine()
-        {
-            // Set display mode
-            Screen.fullScreenMode = videoSettings.FullscreenMode;
-
-            // Skip one frame
-            yield return null;
-
-            // Set resolution
-            Screen.SetResolution(videoSettings.Resolution.width,
-                                 videoSettings.Resolution.height,
-                                 videoSettings.FullscreenMode);
-        }
-    }
-
 
     public static void LoadSettings()
     {
-        GameSettings settings = GetSettings();
+        GameSettings settings = GetSettingsFromPlayerPrefs();
         ApplySettings(settings);
     }
 
-    public static GameSettings GetSettings()
+    public static GameSettings GetSettingsFromPlayerPrefs()
     {
-        #region Video settings
-        Resolution currentResolution = Screen.currentResolution;
+        // Video settings
         Resolution resolution = new Resolution()
         {
-            width = currentResolution.width,
-            height = currentResolution.height
+            width = PlayerPrefs.GetInt(ResolutionWidthKey, Screen.width),
+            height = PlayerPrefs.GetInt(ResolutionHeightKey, Screen.height),
+            refreshRateRatio = new RefreshRate()
+            {
+                numerator = (uint)PlayerPrefs.GetInt(RefreshRateNumeratorKey, 60),
+                denominator = (uint)PlayerPrefs.GetInt(RefreshRateDenominatorKey, 1)
+            }
         };
-        FullScreenMode fullScreenMode = Screen.fullScreenMode;
+        FullScreenMode fullScreenMode = VideoSettings.GetFullScreenMode(PlayerPrefs.GetInt(FullScreenKey, 0));
 
-        VideoSettings videoSettings = new VideoSettings(resolution, fullScreenMode);
-        #endregion
+        VideoSettings videoSettings = new VideoSettings(resolution, fullScreenMode) { IsChanged = true };
 
-        #region Control settings
-        string selectedGame = PlayerPrefs.GetString(GameSensitivityKey, "Default");
 
-        float sensMultiplier = 1f;
-        // Check if the sensitivity multiplier for the selected game is available in the dictionary
-        if (!MouseSensitivity.GameSensMultipliers.TryGetValue(selectedGame, out sensMultiplier))
-        {
-            selectedGame = MouseSensitivity.GameTitles.First();
-        }
+        // Control settings
+        string selectedGameString = PlayerPrefs.GetString(GameSensitivityKey, "Default");
+        MouseSensitivity.Game selectedGame = MouseSensitivity.Games.First(g => g.Title == selectedGameString);
 
-        float sensitivity = PlayerPrefs.GetFloat(MouseSensitivityKey, sensMultiplier);
+        float sensitivity = PlayerPrefs.GetFloat(MouseSensitivityKey, selectedGame.SensitivityMultiplier);
 
-        ControlSettings controlSettings = new ControlSettings(selectedGame, sensitivity);
-        #endregion
+        MouseSensitivity mouseSensitivity = new MouseSensitivity(selectedGame, sensitivity);
 
+        ControlSettings controlSettings = new ControlSettings(mouseSensitivity) { IsChanged = true };
 
         return new GameSettings(videoSettings, controlSettings);
     }

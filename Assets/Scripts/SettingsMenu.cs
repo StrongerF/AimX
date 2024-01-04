@@ -1,19 +1,24 @@
 using Settings;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 using UnityEngine.UI;
+using static Settings.ControlSettings;
 
-public partial class SettingsMenu : MonoBehaviour
+public class SettingsMenu : MonoBehaviour
 {
     private List<string> resolutionStrings;
 
     [Header("Video Settings")]
     [SerializeField] private TMP_Dropdown resolutionDropdown;
+    [SerializeField] private string resolutionStringFormat = "{0}x{1}@{2}Hz";
     [SerializeField] private TMP_Dropdown fullscreenModeDropdown;
     [SerializeField] private TMP_Dropdown languageDropdown;
-
 
     [Header("Control Settings")]
     [SerializeField] private TMP_Dropdown gameDropdown;
@@ -23,16 +28,18 @@ public partial class SettingsMenu : MonoBehaviour
     [SerializeField] private Button saveButton;
 
     private GameSettings currentSettings;
-    private GameSettings selectedSettings;
 
     private string currentResolutionString;
-    private string resolutionStringFormat = "{0}x{1}";
 
-    bool isVideoChanged;
-    bool isControlChanged;
+    #region Video Settings
+    private VideoSettings selectedVideoSettings;
+    #endregion
+    #region Control Settings
+    private ControlSettings selectedControlSettings;
+    #endregion
 
 
-
+    
 
     private void Awake()
     {
@@ -42,6 +49,7 @@ public partial class SettingsMenu : MonoBehaviour
     private void InitializeUI()
     {
         #region Video Settings
+
         // Add values in resolution dropdown
         resolutionDropdown.ClearOptions();
         resolutionStrings = new List<string>(VideoSettings.Resolutions.Length);
@@ -60,33 +68,35 @@ public partial class SettingsMenu : MonoBehaviour
 
         #endregion
         #region Control Settings
+
         gameDropdown.ClearOptions();
         gameDropdown.AddOptions(MouseSensitivity.GameTitles);
+
         #endregion
     }
     private void OnEnable()
     {
-        LoadSettings();
-        UpdateSaveButtonInteractivity(false);
-        isVideoChanged = false;
-        isControlChanged = false;
+        LoadCurrentSettings();
+        selectedVideoSettings.IsChanged = false;
+        selectedControlSettings.IsChanged = false;
     }
 
-    private void LoadSettings()
+    private void LoadCurrentSettings()
     {
-        GetCurrentValues();
+        SetCurrentValues();
         SetMenuValues();
     }
 
-    private void GetCurrentValues()
+    private void SetCurrentValues()
     {
-        currentSettings = SettingsManager.GetSettings();
+        currentSettings = SettingsManager.GetSettingsFromPlayerPrefs();
 
-        selectedSettings = new GameSettings(currentSettings);
+        selectedVideoSettings = currentSettings.Video;
+        selectedControlSettings = currentSettings.Control;
 
         currentResolutionString = currentSettings.Video.Resolution.ToStringExtended(resolutionStringFormat);
         Debug.Log(currentResolutionString);
-
+        
     }
 
     private void SetMenuValues()
@@ -97,24 +107,25 @@ public partial class SettingsMenu : MonoBehaviour
         fullscreenModeDropdown.value = VideoSettings.FullScreenModes.IndexOf(currentSettings.Video.FullscreenMode);
 
         // Control
-        gameDropdown.value = MouseSensitivity.GameTitles.IndexOf(currentSettings.Control.Sensitivity.SourceGame);
+        gameDropdown.value = MouseSensitivity.Games.IndexOf(currentSettings.Control.Sensitivity.SourceGame);
         sensitivityInputField.text = currentSettings.Control.Sensitivity.SourceGameSensitivity.ToString();
+
+        UpdateSaveButtonInteractivity(false);
     }
 
 
-    #region VideoChanged
 
     public void OnFullscreenModeDropdownChanged(int index)
     {
-        selectedSettings.Video.FullscreenMode = VideoSettings.GetFullScreenMode(index);
-        isVideoChanged = true;
+        selectedVideoSettings.FullscreenMode = VideoSettings.GetFullScreenMode(index);
+        selectedVideoSettings.IsChanged = true;
         UpdateSaveButtonInteractivity(true);
     }
 
     public void OnResolutionDropdownChanged(int index)
     {
-        selectedSettings.Video.Resolution = VideoSettings.Resolutions[index];
-        isVideoChanged = true;
+        selectedVideoSettings.Resolution = VideoSettings.Resolutions[index];
+        selectedVideoSettings.IsChanged = true;
         UpdateSaveButtonInteractivity(true);
     }
 
@@ -123,21 +134,17 @@ public partial class SettingsMenu : MonoBehaviour
         LanguageManager.Instance.SetLanguage(LanguageManager.LocalesCodes[index]);
     }
 
-    #endregion
-
-    #region ControlChanged
-
     public void OnGameDropdownChanged(int index)
     {
-        string sourceGame = selectedSettings.Control.Sensitivity.SourceGame;
-        string targetGame = MouseSensitivity.GameTitles[index];
+        MouseSensitivity.Game sourceGame = selectedControlSettings.Sensitivity.SourceGame;
+        MouseSensitivity.Game targetGame = MouseSensitivity.Games[index];
 
-        float sensitivity = MouseSensitivity.ConvertBetweenGames(sourceGame, targetGame, selectedSettings.Control.Sensitivity.SourceGameSensitivity);
+        float sensitivity = MouseSensitivity.ConvertBetweenGames(sourceGame, targetGame, selectedControlSettings.Sensitivity.SourceGameSensitivity);
         sensitivityInputField.text = Math.Round(sensitivity, 3).ToString();
 
-        selectedSettings.Control.Sensitivity.SourceGame = targetGame;
+        selectedControlSettings.Sensitivity.SourceGame = targetGame;
 
-        isControlChanged = true;
+        selectedControlSettings.IsChanged = true;
         UpdateSaveButtonInteractivity(true);
     }
 
@@ -153,9 +160,10 @@ public partial class SettingsMenu : MonoBehaviour
 
         if (sensitivityValue < 0) sensitivityValue = 0;
 
-        selectedSettings.Control.Sensitivity.SourceGameSensitivity = sensitivityValue;
+        selectedControlSettings.Sensitivity.SourceGameSensitivity = sensitivityValue;
+        Debug.Log($"Sensitivity changed to: {sensitivityValue}");
 
-        isControlChanged = true;
+        selectedControlSettings.IsChanged = true;
         UpdateSaveButtonInteractivity(true);
     }
 
@@ -165,10 +173,7 @@ public partial class SettingsMenu : MonoBehaviour
         {
             sensitivityInputField.text = "1";
         }
-        Debug.Log($"Sensitivity changed to: {sensitivityValue}");
     }
-
-    #endregion
 
     private void UpdateSaveButtonInteractivity(bool interactable)
     {
@@ -177,19 +182,14 @@ public partial class SettingsMenu : MonoBehaviour
 
     public void SaveChanges()
     {
-        if (!isVideoChanged) selectedSettings.Video = null;
-        if (!isControlChanged) selectedSettings.Control = null;
-
-        GameSettings settings = new GameSettings()
-        {
-            Video = selectedSettings.Video,
-            Control = selectedSettings.Control
-        };
+        GameSettings settings = new GameSettings(selectedVideoSettings, selectedControlSettings);
 
         SettingsManager.ApplySettings(settings);
         SettingsManager.SaveSettings(settings);
 
-        PauseMenu.Hide();
+        Debug.Log("CHANGES SAVED");
+
+        PauseMenu.Instance.HideSettingsMenu();
     }
 }
 
@@ -199,6 +199,7 @@ public static class ResolutionExtension
     {
         return string.Format(format,
                              resolution.width,
-                             resolution.height);
+                             resolution.height,
+                             resolution.refreshRateRatio.value.ToString("0"));
     }
 }
