@@ -48,4 +48,14 @@ public class PauseMenu : MonoBehaviour
         settingsPanel.SetActive(false);
     }
 
+    public static void Hide()
+    {
+        instance.HideSettingsMenu();
+    }
+
+    public static void Show()
+    {
+        instance.ShowSettingsMenu();
+    }
+
 }
