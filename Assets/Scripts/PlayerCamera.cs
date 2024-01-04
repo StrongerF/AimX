@@ -2,6 +2,36 @@ using UnityEngine;
 
 public class PlayerCamera : MonoBehaviour
 {
+    #region Instance
+    private static PlayerCamera instance;
+    public static PlayerCamera Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindObjectOfType<PlayerCamera>();
+                if (instance == null)
+                {
+                    GameObject gameObject = new GameObject("PlayerCamera");
+                    instance = gameObject.AddComponent<PlayerCamera>();
+                }
+            }
+            return instance;
+        }
+    }
+    #endregion
+
+    public static float Sensitivity
+    {
+        get => Instance.sensX;
+        set
+        {
+            Instance.sensX = value;
+            Instance.sensY = value;
+        }
+    }
+
     [Header("Mouse Sensivity")]
     public float sensX;
     public float sensY;
@@ -17,10 +47,20 @@ public class PlayerCamera : MonoBehaviour
     private float mouseX;
     private float mouseY;
     private float xRotation;
-    private float yRotation;
 
     private void Awake()
     {
+        #region Instance
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+        #endregion
+
         if (targetSpawner == null)
         {
             targetSpawner = GetComponent<ObjectSpawner>();
