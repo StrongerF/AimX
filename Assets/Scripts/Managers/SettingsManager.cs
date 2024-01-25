@@ -119,7 +119,7 @@ public class SettingsManager : MonoBehaviour
         if (settings.Control != null)
         {
             Debug.Log("APPLYING CONTROL SETTINGS...");
-            PlayerCamera.Sensitivity = settings.Control.Sensitivity.ModifiedSensitivity;
+            PlayerCamera.Sensitivity = Convert.ToSingle(Math.Round(settings.Control.Sensitivity.ModifiedSensitivity, 3));
         }
         if (settings.Environment != null)
         {

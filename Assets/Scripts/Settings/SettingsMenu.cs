@@ -176,6 +176,7 @@ namespace SettingsMenuNamespace
             Control.sensitivityInputField.text = Math.Round(sensitivity, 3).ToString();
 
             selectedSettings.Control.Sensitivity.SourceGame = targetGame;
+            selectedSettings.Control.Sensitivity.SourceGameSensitivity = sensitivity;
 
             isControlChanged = true;
             UpdateSaveButtonInteractivity(true);
