@@ -1,46 +1,205 @@
 using System.Collections.Generic;
+using System.Drawing;
+using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class ObjectSpawner : MonoBehaviour
 {
-    [Header("Wall")]
-    [SerializeField] private Transform wallObject;
-    [SerializeField][Range(5, 30)] private int verticalWallSize = 15;
-    [SerializeField][Range(5, 50)] private int horizontalWallSize = 20;
+    #region Instance
+    private static ObjectSpawner instance;
+    public static ObjectSpawner Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindObjectOfType<ObjectSpawner>();
+                if (instance == null)
+                {
+                    GameObject gameObject = new GameObject("ObjectSpawner");
+                    instance = gameObject.AddComponent<ObjectSpawner>();
+                }
+            }
+            return instance;
+        }
+    }
+    #endregion
+
+    #region Unity Editor Properties
+
+    [Header("Wall Properties")]
+    [SerializeField] private GameObject wallObject;
+
+    [SerializeField] private bool applyOverridedSettings;
+
+    
+    [Space]
+
+    [SerializeField][Min(0)] private Vector2 wallSize = new Vector2(20, 15);
+    [SerializeField][Min(0)] private int2 minWallSize = new int2(3, 3);
+    [SerializeField][Min(0)] private int2 maxWallSize = new int2(40, 30);
+
+    [Space]
+
+    [SerializeField][Min(0)] private int wallDistance = 20;
+    [SerializeField][Min(0)] private int minWallDistance = 15;
+    [SerializeField][Min(0)] private int maxWallDistance = 50;
+
+    
+
 
     [Header("Prefab")]
     [SerializeField] private GameObject objectPrefab;
-    [SerializeField][Range(0.1f, 3f)] private float targetSize = 1;
-    [SerializeField][Range(1, 30)] private int numberOfObjects = 10;
+
+    [Space]
+
+    [SerializeField][Min(0.1f)] private float objectSize = 1;
+    [SerializeField][Min(0.1f)] private float minObjectSize = 0.1f;
+    [SerializeField][Min(0.1f)] private float maxObjectSize = 5f;
+
+    [Space]
+
+    [SerializeField][Min(1)] private int numberOfObjects = 10;
+    [SerializeField][Min(1)] private int minObjectsCount = 1;
+    [SerializeField][Min(1)] private int maxObjectsCount = 30;
+
 
     [Header("Object Creation Limitations")]
     [SerializeField][Min(0)] private float minDistance = 2f;
     [SerializeField][Range(0, 30)] private int maxAttempts = 10;
 
+    #endregion
+
+    #region Static Properties
+
+    #region Wall
+    [DoNotSerialize] public static Vector2 WallSize
+    {
+        get => Instance.wallSize;
+        set
+        {
+            if (Instance.applyOverridedSettings) return;
+            Instance.wallSize = value;
+        }
+    }
+    [DoNotSerialize] public static int WallDistance
+    {
+        get => Instance.wallDistance;
+        set
+        {
+            if (Instance.applyOverridedSettings) return;
+            Instance.wallDistance = value;
+        }
+    }
+    #endregion
+
+    #region Target
+    [DoNotSerialize] public static float TargetSize
+    {
+        get => Instance.objectSize;
+        set
+        {
+            if (Instance.applyOverridedSettings) return;
+            Instance.objectSize = value;
+        }
+    }
+    [DoNotSerialize] public static int TargetsCount
+    {
+        get => Instance.numberOfObjects;
+        set
+        {
+            if (Instance.applyOverridedSettings) return;
+            Instance.numberOfObjects = value;
+        }
+    }
+    #endregion
+
+    #region Advanced
+    [DoNotSerialize] public static float MinTargetsDistance
+    {
+        get => Instance.minDistance;
+        set
+        {
+            if (Instance.applyOverridedSettings) return;
+            Instance.minDistance = value;
+        }
+    }
+    [DoNotSerialize] public static int MaxAttempts
+    {
+        get => Instance.maxAttempts;
+        set
+        {
+            if (Instance.applyOverridedSettings) return;
+            Instance.maxAttempts = value;
+        }
+    }
+    #endregion
+
+    #region Value Borders
+    [DoNotSerialize] public static int2 MinWallSize => Instance.minWallSize;
+    [DoNotSerialize] public static int2 MaxWallSize => Instance.maxWallSize;
+
+    [DoNotSerialize] public static int MinWallDistance => Instance.minWallDistance;
+    [DoNotSerialize] public static int MaxWallDistance => Instance.maxWallDistance;
+
+    [DoNotSerialize] public static float MinTargetSize => Instance.minObjectSize;
+    [DoNotSerialize] public static float MaxTargetSize => Instance.maxObjectSize;
+
+    [DoNotSerialize] public static float MinTargetsCount => Instance.minObjectsCount;
+    [DoNotSerialize] public static float MaxTargetsCount => Instance.maxObjectsCount;
+
+    #endregion
+
+    #endregion
 
 
     private float verticalInterval;
     private float horizontalInterval;
 
-
     private List<GameObject> spawnedObjects = new List<GameObject>();
-
+    
     private void Awake()
     {
-        // Set wall size
-        wallObject.transform.localScale = new Vector3(horizontalWallSize, verticalWallSize, 1);
-
-        // Set prefab size
-        objectPrefab.transform.localScale = Vector3.one * targetSize;
-
-        // Get half the lengths of the sides of the wall
-        // to generate a random position (for example, from -length to +length)
-        // and subtract the prefab radius.
-        verticalInterval = verticalWallSize / 2 - objectPrefab.transform.localScale.y;
-        horizontalInterval = horizontalWallSize / 2 - objectPrefab.transform.localScale.x;
+        #region Instance
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+        #endregion
     }
 
-    private void Start()
+    private void SetWallSize(Vector2 size)
+    {
+        wallObject.transform.localScale = size;
+
+        // Set spawner interval range
+        verticalInterval = size.y / 2 - objectSize;
+        horizontalInterval = size.x / 2 - objectSize;
+    }
+
+    private void SetWallDistance(float distance)
+    {
+        // Get eye height to centralize wall vertically
+        float playerEyeHeight = PlayerCamera.Instance.transform.position.y;
+        wallObject.transform.position = new Vector3(0, playerEyeHeight, distance);
+
+        // Set spawner position
+        transform.position = wallObject.transform.position;
+    }
+
+    private void SetObjectSize(float size)
+    {
+        // Set prefab size
+        objectPrefab.transform.localScale = Vector3.one * size;
+    }
+
+    private void GenerateObjects(int numbersOfObjects)
     {
         // Generate {numberOfObjects} gameObjects prefabs
         for (int i = 0; i < numberOfObjects; i++)
@@ -52,14 +211,44 @@ public class ObjectSpawner : MonoBehaviour
         }
     }
 
+    private void DestroyChildObjects()
+    {
+        spawnedObjects.Clear();
+        foreach (Transform child in transform)
+        {
+            Destroy(child.gameObject);
+        }
+    }
+
+
+
+    public static void Spawn()
+    {
+        Instance.SpawnObjects();
+    }
+
+    private void SpawnObjects()
+    {
+        SetWallSize(wallSize);
+        SetWallDistance(wallDistance);
+        SetObjectSize(objectSize);
+
+        DestroyChildObjects();
+        GenerateObjects(numberOfObjects);
+
+        
+
+        applyOverridedSettings = false;
+    }
+
     // Generate a random safe position for an object
     public Vector3 GetRandomPosition(GameObject gameObject = null)
     {
         int attemptsCount = 0;
         Vector3 position = Vector3.zero;
-        bool safePosition = false;
+        bool isSafePosition = false;
 
-        while (!safePosition)
+        while (!isSafePosition)
         {
             attemptsCount++;
 
@@ -71,12 +260,12 @@ public class ObjectSpawner : MonoBehaviour
             // Prevents infinite loops if a safe location cannot be found
             if (attemptsCount > maxAttempts)
             {
-                Debug.Log("No safe location");
+                Debug.LogWarning("No safe location");
                 return position;
             }
 
             // Check if the position is safe
-            safePosition = IsSafePosition(position, gameObject);
+            isSafePosition = IsSafePosition(position, gameObject);
         }
 
         return position;

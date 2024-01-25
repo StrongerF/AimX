@@ -41,6 +41,17 @@ public class SettingsManager : MonoBehaviour
     private const string GameSensitivityKey = "GameSensitivity";
     private const string MouseSensitivityKey = "MouseSensitivity";
 
+    // Environment settings
+    private const string WallSizeWidthKey = "WallSizeWidth";
+    private const string WallSizeHeightKey = "WallSizeHeight";
+    private const string WallDistanceKey = "WallDistance";
+
+    private const string TargetSizeKey = "TargetSize";
+    private const string TargetsCountKey = "TargetsCount";
+
+    private const string TargetsMinDistanceKey = "TargetsMinDistance";
+    private const string TargetMaxSpawnAttemptsKey = "TargetsMaxSpawnAttempts";
+    
     #endregion
 
 
@@ -78,6 +89,19 @@ public class SettingsManager : MonoBehaviour
             PlayerPrefs.SetString(GameSensitivityKey, settings.Control.Sensitivity.SourceGame);
             PlayerPrefs.SetFloat(MouseSensitivityKey, settings.Control.Sensitivity.SourceGameSensitivity);
         }
+
+        // Environment
+        if (settings.Environment != null)
+        {
+            PlayerPrefs.SetFloat(WallSizeWidthKey, settings.Environment.WallWidth);
+            PlayerPrefs.SetFloat(WallSizeHeightKey, settings.Environment.WallHeight);
+            PlayerPrefs.SetInt(WallDistanceKey, settings.Environment.WallDistance);
+            PlayerPrefs.SetFloat(TargetSizeKey, settings.Environment.TargetSize);
+            PlayerPrefs.SetInt(TargetsCountKey, settings.Environment.TargetsCount);
+            PlayerPrefs.SetFloat(TargetsMinDistanceKey, settings.Environment.TargetsMinDistance);
+            PlayerPrefs.SetFloat(TargetMaxSpawnAttemptsKey, settings.Environment.MaxSpawnAttempts);
+            
+        }
         
         PlayerPrefs.Save();
 
@@ -96,6 +120,18 @@ public class SettingsManager : MonoBehaviour
         {
             Debug.Log("APPLYING CONTROL SETTINGS...");
             PlayerCamera.Sensitivity = settings.Control.Sensitivity.ModifiedSensitivity;
+        }
+        if (settings.Environment != null)
+        {
+            Debug.Log("APPLYING ENVIRONMENT SETTINGS...");
+            ObjectSpawner.WallSize = new Vector2(settings.Environment.WallWidth, settings.Environment.WallHeight);
+            ObjectSpawner.WallDistance = settings.Environment.WallDistance;
+            ObjectSpawner.TargetSize = settings.Environment.TargetSize;
+            ObjectSpawner.TargetsCount = settings.Environment.TargetsCount;
+            ObjectSpawner.MinTargetsDistance = settings.Environment.TargetsMinDistance;
+            ObjectSpawner.MaxAttempts = settings.Environment.MaxSpawnAttempts;
+
+            ObjectSpawner.Spawn();
         }
 
         Debug.Log("SETTINGS APPLIED!");
@@ -164,8 +200,18 @@ public class SettingsManager : MonoBehaviour
         ControlSettings controlSettings = new ControlSettings(selectedGame, sensitivity);
         #endregion
 
+        #region Environment settings
+        EnvironmentSettings envSettings = new EnvironmentSettings();
+        envSettings.WallWidth = PlayerPrefs.GetFloat(WallSizeWidthKey, envSettings.WallWidth);
+        envSettings.WallHeight = PlayerPrefs.GetFloat(WallSizeHeightKey, envSettings.WallHeight);
+        envSettings.WallDistance = PlayerPrefs.GetInt(WallDistanceKey, envSettings.WallDistance);
+        envSettings.TargetSize = PlayerPrefs.GetFloat(TargetSizeKey, envSettings.TargetSize);
+        envSettings.TargetsCount = PlayerPrefs.GetInt(TargetsCountKey, envSettings.TargetsCount);
+        envSettings.TargetsMinDistance = PlayerPrefs.GetFloat(TargetsMinDistanceKey, envSettings.TargetsMinDistance);
+        envSettings.MaxSpawnAttempts = PlayerPrefs.GetInt(TargetMaxSpawnAttemptsKey, envSettings.MaxSpawnAttempts);
+        #endregion
 
-        return new GameSettings(videoSettings, controlSettings);
+        return new GameSettings(videoSettings, controlSettings, envSettings);
     }
 
 }

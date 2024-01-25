@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: SettingsEnvironmentTableString_en
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: 7f6d7136ad248474d95ba1ec70bc5b56, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 27320639488
+    m_Localized: Wall Size
+    m_Metadata:
+      m_Items: []
+  - m_Id: 727626801152
+    m_Localized: Wall Distance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 893758988288
+    m_Localized: TARGET
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1090358599680
+    m_Localized: WALL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1210189864960
+    m_Localized: Target Size
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1334047662080
+    m_Localized: Number Of Targets
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2563935035392
+    m_Localized: Minimal Distance Between Targets
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2860954673152
+    m_Localized: ADVANCED
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

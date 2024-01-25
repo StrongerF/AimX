@@ -39,7 +39,7 @@ MonoBehaviour:
     - Preload
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 596f82c321b2b204ebc373dbb80a8199
-    m_Address: SettingsScreenDisplayModeTableString_en
+    m_Address: SettingsVideoDisplayModeTableString_en
     m_ReadOnly: 1
     m_SerializedLabels:
     - Locale-en
@@ -57,6 +57,13 @@ MonoBehaviour:
     m_ReadOnly: 1
     m_SerializedLabels:
     - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 65fbbe6e82b973e4abfe3570035a3d82
+    m_Address: SettingsEnvironmentTableString_en
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    - Preload
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 1
   m_Settings: {fileID: 11400000, guid: dd8c550f0f21dee4c903ed042a68de11, type: 2}

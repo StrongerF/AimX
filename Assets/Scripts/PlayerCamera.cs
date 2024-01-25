@@ -60,15 +60,11 @@ public class PlayerCamera : MonoBehaviour
             Destroy(gameObject);
         }
         #endregion
-
-        if (targetSpawner == null)
-        {
-            targetSpawner = GetComponent<ObjectSpawner>();
-        }
     }
 
     private void Start()
     {
+        targetSpawner = ObjectSpawner.Instance;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
