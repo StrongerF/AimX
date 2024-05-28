@@ -9,7 +9,7 @@ public class PauseMenu : MonoBehaviour
         {
             if (instance == null)
             {
-                instance = FindObjectOfType<PauseMenu>();
+                instance = FindFirstObjectByType<PauseMenu>();
                 if (instance == null)
                 {
                     GameObject gameObject = new GameObject("PauseMenu");

@@ -15,7 +15,7 @@ public class ObjectSpawner : MonoBehaviour
         {
             if (instance == null)
             {
-                instance = FindObjectOfType<ObjectSpawner>();
+                instance = FindFirstObjectByType<ObjectSpawner>();
                 if (instance == null)
                 {
                     GameObject gameObject = new GameObject("ObjectSpawner");

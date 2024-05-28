@@ -10,7 +10,7 @@ public class PlayerCamera : MonoBehaviour
         {
             if (instance == null)
             {
-                instance = FindObjectOfType<PlayerCamera>();
+                instance = FindFirstObjectByType<PlayerCamera>();
                 if (instance == null)
                 {
                     GameObject gameObject = new GameObject("PlayerCamera");

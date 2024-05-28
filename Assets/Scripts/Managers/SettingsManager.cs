@@ -17,7 +17,7 @@ public class SettingsManager : MonoBehaviour
         {
             if (instance == null)
             {
-                instance = FindObjectOfType<SettingsManager>();
+                instance = FindFirstObjectByType<SettingsManager>();
                 if (instance == null)
                 {
                     GameObject gameObject = new GameObject("SettingsManager");
@@ -110,12 +110,13 @@ public class SettingsManager : MonoBehaviour
 
     public static void ApplySettings(GameSettings settings)
     {
-
+#if UNITY_STANDALONE_WIN
         if (settings.Video != null)
         {
             Debug.Log("APPLYING VIDEO SETTINGS...");
             Instance.ChangeResolution(settings.Video);
         }
+#endif
         if (settings.Control != null)
         {
             Debug.Log("APPLYING CONTROL SETTINGS...");
@@ -174,11 +175,11 @@ public class SettingsManager : MonoBehaviour
     public static GameSettings GetSettings()
     {
         #region Video settings
-        Resolution currentResolution = Screen.currentResolution;
+        
         Resolution resolution = new Resolution()
         {
-            width = currentResolution.width,
-            height = currentResolution.height
+            width = Screen.width,
+            height = Screen.height
         };
         FullScreenMode fullScreenMode = Screen.fullScreenMode;
 
@@ -213,6 +214,5 @@ public class SettingsManager : MonoBehaviour
 
         return new GameSettings(videoSettings, controlSettings, envSettings);
     }
-
 }
 

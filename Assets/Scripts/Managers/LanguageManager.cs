@@ -13,7 +13,7 @@ public class LanguageManager : MonoBehaviour
         {
             if (instance == null)
             {
-                instance = FindObjectOfType<LanguageManager>();
+                instance = FindFirstObjectByType<LanguageManager>();
                 if (instance == null)
                 {
                     GameObject gameObject = new GameObject("LanguageManager");
